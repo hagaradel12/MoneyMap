@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import axiosInstance from "@/app/utils/axiosInstance"
 
-const backend_url = "http://localhost:3001"
+const backend_url = "http://localhost:3000"
+const frontend_url = "http://localhost:3001"
 
 export default function Register() {
   const router = useRouter()
@@ -24,7 +25,7 @@ export default function Register() {
     setError("")
 
     try {
-      const response = await axiosInstance.post(`${backend_url}/register`, {
+      const response = await axiosInstance.post(`${backend_url}/auth/register`, {
         name,
         username,
         email,
@@ -34,7 +35,7 @@ export default function Register() {
       const { status } = response
       if (status === 201) {
         setTimeout(() => {
-          router.push(`${backend_url}/login`) // Redirect to login page after successful registration
+          router.push(`${frontend_url}/login`) // Redirect to login page after successful registration
         }, 1000)
       }
     } catch (err) {
