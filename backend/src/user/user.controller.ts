@@ -1,0 +1,32 @@
+import { Controller, Post, Get, Put, Delete, Param, Body } from '@nestjs/common';
+import { UsersService } from './user.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Users } from './user.schema';
+
+@Controller('user')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+
+  // Get user by username
+  @Get(':username')
+  async findUserByUsername(@Param('username') username: string) {
+    return this.usersService.findUserByUsername(username);
+  }
+
+  // Update user by username
+  @Put(':username')
+  async updateUser(
+    @Param('username') username: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<Users> {
+    return this.usersService.updateUser(username, updateUserDto);
+  }
+
+  // Delete user by username
+  @Delete(':username')
+  async deleteUser(@Param('username') username: string): Promise<void> {
+    return this.usersService.deleteUser(username);
+  }
+}
