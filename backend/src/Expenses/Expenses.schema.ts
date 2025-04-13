@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
+export type ExpensesDocument = HydratedDocument<Expenses>
 // Define or import the Expenses schema
 @Schema()
 export class Expenses {
@@ -18,4 +19,5 @@ export class Expenses {
   flagForIncome: boolean;
 }
 
-export type ExpensesDocument = HydratedDocument<Expenses>;
+
+export const ExpensesSchema = SchemaFactory.createForClass(Expenses);
