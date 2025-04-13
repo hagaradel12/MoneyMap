@@ -6,6 +6,8 @@ import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as dotenv from 'dotenv';
 import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
+import { NotificationModule } from './notification/notification.module';
+import { WalletModule } from './wallet/wallet.module';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -20,7 +22,9 @@ dotenv.config();
   }),
   MongooseModule.forRoot(process.env.MONGO_URI, {
     dbName: process.env.DATABASE_NAME,
-  }),],
+  }),
+  NotificationModule,
+  WalletModule,],
 
   controllers: [AppController],
   providers: [AppService],
