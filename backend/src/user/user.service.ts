@@ -7,10 +7,13 @@ import { Users, UserDocument } from './user.schema';
 import * as bcrypt from 'bcrypt'; // Import bcrypt for password hashing
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { WalletDocument } from 'src/wallet/wallet.schema';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(Users.name) private usersModel: Model<UserDocument>) {}
+  constructor(@InjectModel(Users.name) private usersModel: Model<UserDocument>,
+    private readonly walletModel: Model<WalletDocument>,
+) {}
 
   // CREATE NEW User FOR REGISTER
   // CREATE NEW User FOR REGISTER
@@ -27,6 +30,12 @@ export class UsersService {
     if (user) {
     return user;
     }
+  }
+
+  // Get wallet by username
+  async getWalletByUsername(username: string): Promise<WalletDocument> {
+      const user = (await this.usersModel.findOne({ username }).populate('wallet'));
+      return await this.walletModel.findById(user.wallet).populate('expenses');  
   }
 
   // Update user by username

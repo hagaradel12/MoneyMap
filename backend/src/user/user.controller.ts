@@ -14,6 +14,12 @@ export class UsersController {
     return this.usersService.findUserByUsername(username);
   }
 
+  //get wallet by username
+  @Get('wallet/:username/')
+  async getWalletByUsername(@Param('username') username: string) {
+    return this.usersService.getWalletByUsername(username);
+  }
+
   // Update user by username
   @Put(':username')
   async updateUser(
