@@ -11,7 +11,7 @@ export class Expenses {
   @Prop()
   price: number;
   @Prop()
-  paymentMethod: number;
+  paymentMethod: String;
   @Prop()
   date: Date;
   @Prop()
