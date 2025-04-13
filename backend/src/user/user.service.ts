@@ -7,8 +7,11 @@ import { Users, UserDocument } from './user.schema';
 import * as bcrypt from 'bcrypt'; // Import bcrypt for password hashing
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateReminderDto } from './dto/create-reminder.dto';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+
+
+import { AddReminderDto } from './dto/add-reminder.dto';
+import { AddNotificationDto } from './dto/add-notification.dto';
+
 
 @Injectable()
 export class UsersService {
@@ -54,79 +57,84 @@ export class UsersService {
     }
   }
   
-////////////////////////////////////
+
 // User Reminders and Notifications
-  async addReminder(username: string, createReminderDto: CreateReminderDto): Promise<Users> {
-    const user = await this.usersModel.findOneAndUpdate(
-      { username },
-      { $push: { reminders: createReminderDto } },
-      { new: true }
-    ).exec();
 
-    if (!user) {
-      throw new NotFoundException(`User with username ${username} not found`);
-    }
+//Reminders
+async addReminder(username: string, addReminderDto: AddReminderDto): Promise<Users> {
+  const user = await this.usersModel.findOneAndUpdate(
+    { username },
+    { $push: { reminders: addReminderDto } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  return user;
+}
 
-    return user;
-  }
- 
+///Removes a specific reminder
+async removeReminder(username: string, reminderId: string): Promise<Users> {
+  const user = await this.usersModel.findOneAndUpdate(
+    { username },
+    { $pull: { reminders: { _id: reminderId } } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  return user;
+}
 
-  async removeReminder(username: string, reminderId: string): Promise<Users> {
-    const user = await this.usersModel.findOneAndUpdate(
-      { username },
-      { $pull: { reminders: { _id: reminderId } } },
-      { new: true }
-    ).exec();
+////Clears all reminders
+async clearReminders(username: string): Promise<Users> {
+  const user = await this.usersModel.findOneAndUpdate(
+    { username },
+    { $set: { reminders: [] } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  return user;
+}
+// Notifications
 
-    if (!user) {
-      throw new NotFoundException(`User with username ${username} not found`);
-    }
+async addNotification(username: string, addNotificationDto: AddNotificationDto): Promise<Users> {
+  const notification = { ...addNotificationDto, read: false };
+  const user = await this.usersModel.findOneAndUpdate(
+    { username },
+    { $push: { notifications: notification } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  return user;
+}
 
-    return user;
-  }
-
-  // Add notification to user
-  async addNotification(username: string, createNotificationDto: CreateNotificationDto): Promise<Users> {
-    const user = await this.usersModel.findOneAndUpdate(
-      { username },
-      { $push: { notifications: createNotificationDto } },
-      { new: true }
-    ).exec();
-
-    if (!user) {
-      throw new NotFoundException(`User with username ${username} not found`);
-    }
-
-    return user;
-  }
-
-  async clearNotifications(username: string): Promise<Users> {
-    const user = await this.usersModel.findOneAndUpdate(
-      { username },
-      { $set: { notifications: [] } },
-      { new: true }
-    ).exec();
-
-    if (!user) {
-      throw new NotFoundException(`User with username ${username} not found`);
-    }
-
-    return user;
-  }
-
-  async markNotificationAsRead(username: string, notificationId: string): Promise<Users> {
-    const user = await this.usersModel.findOneAndUpdate(
-      { username, 'notifications._id': notificationId },
-      { $set: { 'notifications.$.read': true } },
-      { new: true }
-    ).exec();
-
-    if (!user) {
-      throw new NotFoundException(`User or notification not found`);
-    }
-
-    return user;
-  }
+/////Clears all notifications
+async clearNotifications(username: string): Promise<Users> {
+  const user = await this.usersModel.findOneAndUpdate(
+    { username },
+    { $set: { notifications: [] } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  return user;
+}
+///Marks a specific notification as read
+async markNotificationAsRead(username: string, notificationId: string): Promise<Users> {
+  const user = await this.usersModel.findOneAndUpdate(
+    { username, 'notifications._id': notificationId },
+    { $set: { 'notifications.$.read': true } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User or notification not found`);
+  return user;
+}
+///Removes a specific notification
+async removeNotification(username: string, notificationId: string): Promise<Users> {
+  const user = await this.usersModel.findOneAndUpdate(
+    { username },
+    { $pull: { notifications: { _id: notificationId } } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User or notification not found`);
+  return user;
+}
 
 
 }

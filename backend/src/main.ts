@@ -5,12 +5,15 @@ import { AppService } from './app.service';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  
+
   // ✅ Enable CORS BEFORE listening
   app.enableCors({
     origin: 'http://localhost:3001',  // Frontend origin
     credentials: true,                // Include if you're using cookies or auth headers
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   });
+
 
   await app.listen(process.env.PORT ?? 3000);
 

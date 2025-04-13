@@ -20,7 +20,9 @@ dotenv.config();
   }),
   MongooseModule.forRoot(process.env.MONGO_URI, {
     dbName: process.env.DATABASE_NAME,
-  }),],
+  }),
+  
+],
 
   controllers: [AppController],
   providers: [AppService],
