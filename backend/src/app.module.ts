@@ -8,6 +8,8 @@ import * as dotenv from 'dotenv';
 import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
 import { NotificationModule } from './notification/notification.module';
 import { WalletModule } from './wallet/wallet.module';
+import { RemindersController } from './reminders/reminders.controller';
+import { RemindersService } from './reminders/reminders.service';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -26,7 +28,7 @@ dotenv.config();
   NotificationModule,
   WalletModule,],
 
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, RemindersController],
+  providers: [AppService, RemindersService],
 })
 export class AppModule {}
