@@ -1,25 +1,34 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<Users>;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Users {
   @Prop({ required: true })
   name: string;
 
   @Prop({ required: true, unique: true })
-  username: string;
-
-  @Prop({ required: true, unique: true })
   email: string;
+
+  @Prop()
+  phoneNumber: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Wallet', required: false })
+  wallet: Types.ObjectId;
 
   @Prop({ required: true })
   passwordHash: string;
 
-  
-  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Wallet' })
-  wallet: mongoose.Types.ObjectId; //reference to the Wallet schema
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Reminder' }], default: [] })
+  reminders: Types.ObjectId[];
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Notification' }], default: [] })
+  notifications: Types.ObjectId[];
 }
 
 export const UsersSchema = SchemaFactory.createForClass(Users);
+
+
+
+  

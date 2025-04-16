@@ -10,9 +10,9 @@ export class WalletController {
 
  //create wallet using create wallet dto that takes currency and balance? as input, and expenses is 
  //initially an empty array
-  @Post()
-  create(@Body() walletDto: CreateWalletDto) {
-    return this.walletService.create(walletDto);
+  @Post(':email')
+  create(@Param('email') email: string, @Body() walletDto: CreateWalletDto) {
+    return this.walletService.create(email, walletDto);
   }
 
   //get user's wallet by wallet id to display the balance and expenses
@@ -33,15 +33,15 @@ export class WalletController {
   }
 //increase balance according to income amount and username
 //first find wallet by username then change its balance
-  @Put(':username/:amount')
-  incBalance(@Param('username') username: string, @Param('amount') amount: number) {
-    return this.walletService.incBalance(username, amount);
+  @Put(':email/:amount')
+  incBalance(@Param('email') email: string, @Param('amount') amount: number) {
+    return this.walletService.incBalance(email, amount);
   }
 
   //increase balance according to income amount and username
-  @Put(':username/:amount')
-  idecBalance(@Param('username') username: string, @Param('amount') amount: number) {
-    return this.walletService.decBalance(username, amount);
+  @Put(':email/:amount')
+  idecBalance(@Param('email') email: string, @Param('amount') amount: number) {
+    return this.walletService.decBalance(email, amount);
   }
 
 

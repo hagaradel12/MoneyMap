@@ -11,7 +11,7 @@ export class AuthController {
     @Get('get-cookie-data')
     getCookieData(@Req() req: Request) {
         const cookies = req.cookies;
-        const userData = cookies['user_data'] || null;
+        const userData = cookies['user_data'];
 
         if (!userData) {
             throw new HttpException('No user data found in the cookie', HttpStatus.NOT_FOUND);
@@ -30,25 +30,29 @@ export class AuthController {
             // Combine data into a single object
             const combinedData = {
                 token: result.access_token,
-                username: result.payload.username,
+                email: result.payload.email,
             };
 
             // Convert the object to a JSON string
             const combinedDataString = JSON.stringify(combinedData);
 
             // Set the single cookie
-            res.cookie('user_data', result, {
-                httpOnly: true, // Prevents client-side JavaScript access
+            res.cookie('user_data', combinedDataString, {
+                httpOnly: true,  // Prevents client-side JavaScript access
                 secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
                 maxAge: 86400 * 1000, // Cookie expiration time in milliseconds
+                // sameSite: 'None', // Allow cookies in cross-origin requests
             });
+
+            console.log(combinedDataString)
+            
 
             // Return success response
             return {
                 statusCode: HttpStatus.OK,
                 message: 'Login successful',
                 user: result.payload,
-                access_token: result.access_token
+                access_token: result.access_token,
             };
         } catch (error) {
             console.log(error);

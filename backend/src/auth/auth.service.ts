@@ -19,9 +19,9 @@ export class AuthService {
     ) {}
 
     async register(user: RegisterDto): Promise<string> {
-        const existingUser = await this.usersService.findUserByUsername(user.username);
+        const existingUser = await this.usersService.findUserByEmail(user.email);
         if (existingUser) {
-            throw new ConflictException('Username already exists');
+            throw new ConflictException('Email already exists');
         }
 
         // Hash password before saving
@@ -40,14 +40,14 @@ export class AuthService {
     }
 
     async login(signinDto: SignInDto) {
-        const { username, password } = signinDto;
+        const { email, password } = signinDto;
 
-        console.log(`Attempting login for username: ${username}`);
+        console.log(`Attempting login for email: ${email}`);
 
-        // Find user by username
-        const user = await this.usersService.findUserByUsername(username);
+        // Find user by email
+        const user = await this.usersService.findUserByEmail(email);
         if (!user) {
-            console.error(`User not found for username: ${username}`);
+            console.error(`User not found for email: ${email}`);
             throw new NotFoundException('User not found');
         }
 
@@ -58,14 +58,14 @@ export class AuthService {
         console.log('Password Validation Result:', isPasswordValid);
 
         if (!isPasswordValid) {
-            console.error(`Invalid password for user: ${username}`);
+            console.error(`Invalid password for user: ${email}`);
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        console.log(`User authenticated: ${username}, generating token...`);
+        console.log(`User authenticated: ${email}, generating token...`);
 
         // JWT payload
-        const payload = { username: user.username};
+        const payload = { email: user.email};
         console.log('Payload met');
 
         const secret = process.env.JWT_SECRET || 'yourSuperSecretKey';
@@ -75,6 +75,8 @@ export class AuthService {
         // Generate token
         const token = await this.jwtService.signAsync(payload, { expiresIn });
         console.log('Generated token:', token);
+
+
 
 
         return {

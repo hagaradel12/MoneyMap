@@ -8,7 +8,7 @@ export class Expenses {
   @Prop()
   name: string;
   @Prop()
-  category: number;
+  category: string;
   @Prop()
   price: number;
   @Prop()

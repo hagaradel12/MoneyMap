@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Patch } from '@nestjs/common';
 import { CreateExpenseDto } from './dto/createExpense.dto';
 import { UpdateExpenseDto } from './dto/updateExpense.dto';
-import { ExpensesService } from './Expenses.service';
-import { Expenses } from './Expenses.schema';
+import { ExpensesService } from './expenses.service';
+import { Expenses } from './expenses.schema';
 
 @Controller('expenses')
 export class ExpensesController {
@@ -13,14 +13,16 @@ export class ExpensesController {
     return this.expensesService.findById(id);
   }
 
-  @Post()
-  async createExpense(@Body() createExpenseDto: CreateExpenseDto): Promise<Expenses> {
-    return this.expensesService.createExpense(createExpenseDto);
+  //email of user to be able to add expense to wallets's array of expenses and change user's balance in wallet
+  @Post(':email')
+  async createExpense(@Param('email') email: string, @Body() createExpenseDto: CreateExpenseDto): Promise<Expenses> {
+    return this.expensesService.createExpense(email, createExpenseDto);
   }
 
-  @Delete(':id')
-  async deleteExpenseById(@Param('id') id: string) {
-    return this.expensesService.deleteById(id);
+  //delete expense and remove it from user's array of expenses AND UPDATE balance in wallet
+  @Delete(':email/:id')
+  async deleteExpenseById(@Param('email') email:string, @Param('id') id: string) {
+    return this.expensesService.deleteById(email, id);
 }
     
     @Put(':id')
