@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Sidebar from '../sidebar/page';
-
+import NotificationsWindow from './NotificationWindow';
 interface WalletResponse {
     _id: string; 
   }
@@ -46,6 +46,8 @@ export default function Dashboard() {
     const [sumExpenses, setSumExpenses] = useState<number>(0);
     const [sumIncome, setSumIncome] = useState<number>(0);
     const [user_name, setName] = useState<string>('');
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [userEmail, setUserEmail] = useState<string>('');
     
     
     useEffect(() => {
@@ -56,6 +58,7 @@ export default function Dashboard() {
             const data = JSON.parse(dataString); // Parse the string into an object
             console.log((user_data.data.userData));
             const email = data.email;
+            setUserEmail(email)
             console.log(email);
             const user = await axiosInstance.get<UserDocument>(`${backend_url}/user/${email}`);
             setName(user.data.name);
@@ -121,7 +124,13 @@ export default function Dashboard() {
             <input type="text" placeholder="Search here..." className="outline-none w-64" />
           </div>
           <div className="flex items-center space-x-4">
-            <Bell className="w-5 h-5" />
+          <div className="relative">
+  <Bell
+    className="w-5 h-5 cursor-pointer"
+    onClick={() => setShowNotifications(prev => !prev)}
+  />
+  {showNotifications && <NotificationsWindow email={userEmail} />}
+</div>
             <div className="flex items-center space-x-2">
               <UserCircle className="w-6 h-6" />
               <span>{user_name}</span>
