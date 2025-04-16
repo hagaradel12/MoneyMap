@@ -11,6 +11,12 @@ import { Wallet } from './wallet/wallet.schema';
 import { WalletModule } from './wallet/wallet.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { HttpModule } from '@nestjs/axios';
+import { NotificationController } from './notifications/notifications.controller';
+import { NotificationService } from './notifications/notifications.service';
+import { NotificationModule } from './notifications/notifications.module';
+import { RemindersService } from './reminders/reminders.service';
+import { RemindersController } from './reminders/reminders.controller';
+import { RemindersModule } from './reminders/reminders.module';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -20,6 +26,7 @@ dotenv.config();
     AuthModule,
     WalletModule,
     ExpensesModule,
+    NotificationModule,
     HttpModule,    
     //Config and connections
     ConfigModule.forRoot({
@@ -27,7 +34,9 @@ dotenv.config();
   }),
   MongooseModule.forRoot(process.env.MONGO_URI, {
     dbName: process.env.DATABASE_NAME,
-  }),],
+  }),
+  NotificationModule,
+  RemindersModule,],
 
   controllers: [AppController],
   providers: [AppService, CurrencyService],
