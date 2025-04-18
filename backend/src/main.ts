@@ -1,3 +1,4 @@
+import * as cookieParser from 'cookie-parser'; // Import cookie-parser
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppService } from './app.service';
@@ -14,6 +15,9 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   });
 
+
+  // Use cookie-parser middleware to parse cookies in incoming requests
+  app.use(cookieParser());
 
   await app.listen(process.env.PORT ?? 3000);
 

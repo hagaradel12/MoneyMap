@@ -10,25 +10,31 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
 
-  // Get user by username
-  @Get(':username')
-  async findUserByUsername(@Param('username') username: string) {
-    return this.usersService.findUserByUsername(username);
+  // Get user by email
+  @Get(':email')
+  async findUserByEmail(@Param('email') email: string) {
+    return this.usersService.findUserByEmail(email);
   }
 
-  // Update user by username
-  @Put(':username')
+  //get wallet by email
+  @Get('wallet/:email/')
+  async getWalletByEmail(@Param('email') email: string) {
+    return this.usersService.getWalletByEmail(email);
+  }
+
+  // Update user by email
+  @Put(':email')
   async updateUser(
-    @Param('username') username: string,
+    @Param('email') email: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<Users> {
-    return this.usersService.updateUser(username, updateUserDto);
+    return this.usersService.updateUser(email, updateUserDto);
   }
 
-  // Delete user by username
-  @Delete(':username')
-  async deleteUser(@Param('username') username: string): Promise<void> {
-    return this.usersService.deleteUser(username);
+  // Delete user by email
+  @Delete(':email')
+  async deleteUser(@Param('email') email: string): Promise<void> {
+    return this.usersService.deleteUser(email);
   }
 
 

@@ -1,6 +1,6 @@
 export class RegisterDto{
     name:string;
     email:string;
-    username:string;
+    phoneNumber:string;
     password:string;
 }

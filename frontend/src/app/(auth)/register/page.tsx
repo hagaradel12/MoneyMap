@@ -14,7 +14,6 @@ export default function Register() {
   const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -27,7 +26,6 @@ export default function Register() {
     try {
       const response = await axiosInstance.post(`${backend_url}/auth/register`, {
         name,
-        username,
         email,
         password,
       })
@@ -87,39 +85,9 @@ export default function Register() {
                 <input
                   type="text"
                   placeholder="Full Name"
-                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="text-gray-500 w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-user"
-                  >
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </span>
-                <input
-                  type="text"
-                  placeholder="Username"
-                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
@@ -147,7 +115,7 @@ export default function Register() {
                 <input
                   type="email"
                   placeholder="Email Address"
-                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="text-gray-500 w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -177,7 +145,7 @@ export default function Register() {
                 <input
                   type="password"
                   placeholder="Password"
-                  className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="text-gray-500 w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

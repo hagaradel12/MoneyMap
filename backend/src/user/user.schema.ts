@@ -1,49 +1,34 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<Users>;
 
-@Schema()
-class Reminder {
-  @Prop({ required: true })
-  content: string;
-
-  @Prop({ default: Date.now })
-  createdAt: Date;
-}
-
-@Schema()
-class Notification {
-  @Prop({ required: true })
-  message: string;
-
-  @Prop({ default: false })
-  read: boolean;
-
-  @Prop({ default: Date.now })
-  createdAt: Date;
-}
-
-
-@Schema()
+@Schema({ timestamps: true })
 export class Users {
   @Prop({ required: true })
   name: string;
 
   @Prop({ required: true, unique: true })
-  username: string;
-
-  @Prop({ required: true, unique: true })
   email: string;
+
+  @Prop()
+  phoneNumber: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Wallet', required: false })
+  wallet: Types.ObjectId;
 
   @Prop({ required: true })
   passwordHash: string;
 
-  @Prop({ type: [Notification], default: [] })
-  notifications: Notification[];
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Reminder' }], default: [] })
+  reminders: Types.ObjectId[];
 
-  @Prop({ type: [Reminder], default: [] })
-  reminders: Reminder[];
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Notification' }], default: [] })
+  notifications: Types.ObjectId[];
 }
 
 export const UsersSchema = SchemaFactory.createForClass(Users);
+
+
+
+  

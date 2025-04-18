@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { handleLogin } from "./loginServer";
+import { handleLogin } from './loginServer';
 
 const LoginPage = () => {
-  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
   const router = useRouter();
@@ -16,11 +16,13 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const loginResult = await handleLogin(username, password);
+      const loginResult = await handleLogin(email, password);
 
       if (loginResult.success) {
-        const { user } = loginResult;
-        localStorage.setItem("username", user.username);
+        const { user, token } = loginResult; //token is returned by the backend
+        localStorage.setItem("email", user.email);
+        localStorage.setItem("token", token); //save token to localStorage
+        
         router.push("/dashboard");
       } else {
         setError("Login failed. Please check your credentials.");
@@ -49,7 +51,7 @@ const LoginPage = () => {
           </div>
 
           <form onSubmit={onLogin} className="space-y-4 flex flex-col items-center">
-            {/* Username Input */}
+            {/* email Input */}
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                 {/* User Icon */}
@@ -71,10 +73,10 @@ const LoginPage = () => {
               </span>
               <input
                 type="text"
-                placeholder="Username"
-                className="w-80 pl-10 pr-4 py-2 border border-black-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Email"
+                className="text-gray-500 w-80 pl-10 pr-4 py-2 border border-black-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -102,7 +104,7 @@ const LoginPage = () => {
               <input
                 type="password"
                 placeholder="Password"
-                className="w-80 pl-10 pr-4 py-2 border border-black-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
+                className="text-gray-500 w-80 pl-10 pr-4 py-2 border border-black-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-600"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

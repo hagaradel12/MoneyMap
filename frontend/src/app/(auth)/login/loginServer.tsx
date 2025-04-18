@@ -7,21 +7,21 @@ const frontend_url = "http://localhost:3001"
 interface LoginResponse {
   access_token: string;
   user: {
-    username: string;
+    email: string;
   };
 }
 
 interface DecodedToken {
-  username: string;
+  email: string;
   exp: number;
 }
 
-export const handleLogin = async (username: string, password: string) => {
+export const handleLogin = async (email: string, password: string) => {
   try {
-    console.log("Attempting login with:", { username, password });
+    console.log("Attempting login with:", { email, password });
 
     const response = await axiosInstance.post<LoginResponse>(`${backend_url}/auth/login`, {
-      username,
+      email,
       password,
     });
 
@@ -34,7 +34,7 @@ export const handleLogin = async (username: string, password: string) => {
 
         console.log("Decoded token:", decodedToken);
 
-        if (decodedToken.username !== undefined) {
+        if (decodedToken.email !== undefined) {
           return {
             success: true,
             token: access_token,
@@ -54,4 +54,3 @@ export const handleLogin = async (username: string, password: string) => {
     throw error;
   }
 };
-
