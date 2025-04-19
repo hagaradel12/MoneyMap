@@ -54,9 +54,8 @@ export default function Dashboard() {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
   const [formData, setFormData] = useState<ExpenseDocument | null>(null);
-  
 
-  
+const [walletBalance, setWalletBalance] = useState<number>(0);
 
   const backend_url = "http://localhost:3000";
 
@@ -224,6 +223,7 @@ export default function Dashboard() {
       if (wallet.data) {
         const walletId = wallet.data._id;
         const walletDetails = await axiosInstance.get<WalletDocument>(`${backend_url}/wallets/${walletId}`);
+        setWalletBalance(walletDetails.data.balance);
         setCurrency(walletDetails.data.currency);
         const expenses: ExpenseDocument[] = walletDetails.data.expenses;
         setExpense(expenses);
@@ -282,109 +282,119 @@ export default function Dashboard() {
   
         {/* Expenses Summary */}
         <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">My Expenses</h3>
-  
-          <div className="flex justify-end items-center gap-4 mb-4">
-            {/* Month Filter Dropdown */}
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-full text-blue-600"
-              value={selectedMonth}
-              onChange={(e) => {
-                const month = parseInt(e.target.value);
-                setSelectedMonth(month);
-                const filtered =
-                  month === -1
-                    ? allExpenses
-                    : allExpenses.filter(
-                        (expense) => new Date(expense.date).getMonth() === month
-                      );
-                setExpense(filtered);
-              }}
-            >
-              <option value="-1">All Months</option>
-              <option value="0">January</option>
-              <option value="1">February</option>
-              <option value="2">March</option>
-              <option value="3">April</option>
-              <option value="4">May</option>
-              <option value="5">June</option>
-              <option value="6">July</option>
-              <option value="7">August</option>
-              <option value="8">September</option>
-              <option value="9">October</option>
-              <option value="10">November</option>
-              <option value="11">December</option>
-            </select>
-  
-            {/* Create Expense Button */}
-            <button
-  onClick={() => {
-    setFormData(null); // default
-    setIsCreateFormOpen(true);
-  }}
->
-  Create Expense
-</button>
+  <div className="flex justify-between items-center mb-6">
+    {/* Left: Balance */}
+    <div className="flex flex-col items-start">
+      <div className="text-2xl font-semibold text-gray-600">
+        Balance:{" "}
+        <span className="text-2xl font-semibold text-blue-600">
+        {currency} {walletBalance.toFixed(2)}
+        </span>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-800 mt-2">My Expenses</h3>
+    </div>
 
-          </div>
+    {/* Right: Month Filter Dropdown + Create Expense Button */}
+    <div className="flex items-center gap-4">
+      {/* Month Filter Dropdown */}
+      <select
+        className="px-4 py-2 border border-gray-300 rounded-full text-blue-600"
+        value={selectedMonth}
+        onChange={(e) => {
+          const month = parseInt(e.target.value);
+          setSelectedMonth(month);
+          const filtered =
+            month === -1
+              ? allExpenses
+              : allExpenses.filter(
+                  (expense) => new Date(expense.date).getMonth() === month
+                );
+          setExpense(filtered);
+        }}
+      >
+        <option value="-1">All Months</option>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <option key={i} value={i}>
+            {new Date(0, i).toLocaleString("default", { month: "long" })}
+          </option>
+        ))}
+      </select>
+
+      {/* Create Expense Button */}
+      <button
+        onClick={() => {
+          setFormData(null);
+          setIsCreateFormOpen(true);
+        }}
+        className="px-4 py-2 bg-blue-600 text-white rounded-full"
+      >
+        + Create Expense
+      </button>
+    </div>
+  </div>
   
           {/* Expenses List */}
-          <ul>
-            {expenses
-              .filter((expense) =>
-                expense[searchBy]
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
-              )
-              .map(
-                (expense, index) =>
-                  !expense.flagForIncome && (
-                    <li
-                      key={index}
-                      className="flex justify-between items-center py-4 border-b last:border-b-0"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
-                          {getCategoryDetails(expense.category).icon}
-                        </div>
-                        <div>
-                          <div className="font-medium">{expense.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(expense.date).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-  
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500">{expense.category}</div>
-                        <div className="font-bold text-red-500">
-                          - {currency} {expense.price.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-600">{expense.paymentMethod}</div>
-                      </div>
-  
-                      <div className="flex gap-2 mt-2">
-                      <button
-  onClick={() => {
-    setFormData(expense); // fill with data
-    setIsUpdateFormOpen(true);
-  }}
->
-  Update
-</button>
+<ul>
+  {expenses
+    .filter((expense) =>
+      expense[searchBy]
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    )
+    .map(
+      (expense, index) =>
+        !expense.flagForIncome && (
+          <li
+            key={index}
+            className="flex justify-between items-center py-4 border-b last:border-b-0"
+          >
+            {/* Left Side: Category and Expense Name */}
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
+                {getCategoryDetails(expense.category).icon}
+              </div>
+              <div>
+                <div className="font-medium">{expense.name}</div>
+                <div className="text-sm text-gray-500">
+                  {new Date(expense.date).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
 
+            {/* Right Side: Expense Details, Update and Delete Buttons */}
+            <div className="flex flex-col items-end gap-2">
+              <div className="text-right">
+                <div className="text-sm text-gray-500">{expense.category}</div>
+                <div className="font-bold text-red-500">
+                  - {currency} {expense.price.toFixed(2)}
+                </div>
+                <div className="text-sm text-gray-600">{expense.paymentMethod}</div>
+              </div>
 
-                        <button
-                          onClick={() => handleDelete(expense._id)}
-                          className="text-red-500"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </li>
-                  )
-              )}
-          </ul>
+              {/* Action Buttons (Update and Delete) */}
+              <div className="flex gap-4 mt-2">
+                <button
+                  onClick={() => {
+                    setFormData(expense); // fill with data
+                    setIsUpdateFormOpen(true);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-full"
+                >
+                  Update
+                </button>
+                <button
+                  onClick={() => handleDelete(expense._id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-full"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </li>
+        )
+    )}
+</ul>
+
         </div>
       </main>
 
@@ -474,18 +484,6 @@ export default function Dashboard() {
     className="w-full mb-3 p-2 border border-gray-300 rounded"
     required
   />
-
-  {/* Income Flag */}
-  <div className="flex items-center gap-2 mb-3">
-    <input
-      type="checkbox"
-      checked={formData?.flagForIncome ?? false}
-      onChange={(e) =>
-        setFormData({ ...formData!, flagForIncome: e.target.checked })
-      }
-    />
-    <label>Is this income?</label>
-  </div>
 
         <div className="flex justify-between mt-4">
           <button

@@ -13,6 +13,16 @@ export class ExpensesController {
     return this.expensesService.findById(id);
   }
 
+  @Get('name/:name')
+  async findByName(@Param('name') name: string): Promise<Expenses []> {
+    return this.expensesService.findByName(name);
+  }
+
+  @Get('category/:category')
+  async findByCategory(@Param('category') category: string): Promise<Expenses []> {
+    return this.expensesService.findByCategory(category);
+  }
+
   //email of user to be able to add expense to wallets's array of expenses and change user's balance in wallet
   @Post(':email')
   async createExpense(@Param('email') email: string, @Body() createExpenseDto: CreateExpenseDto): Promise<Expenses> {

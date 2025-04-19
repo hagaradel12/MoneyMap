@@ -30,6 +30,24 @@ async findById(id: string): Promise<Expenses> {
   return expense;
 }
 
+//get expense by Name
+async findByName(named: string): Promise<Expenses []> {
+  const expense = await this.expensesModel.find({ name: named }).exec();
+  if (!expense) {
+    throw new NotFoundException(`Expense with name ${named} not found`);
+  }
+  return expense;
+}
+
+//get expense by Name
+async findByCategory(cat: string): Promise<Expenses []> {
+  const expense = await this.expensesModel.find({ category: cat }).exec();
+  if (!expense) {
+    throw new NotFoundException(`Expense with category ${cat} not found`);
+  }
+  return expense;
+}
+
 //takes email and expense dto
 //add expense to wallet's array of expenses
 //change user's balance in wallet
