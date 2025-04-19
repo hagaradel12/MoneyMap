@@ -28,14 +28,14 @@
     "@types/js-cookie": "^3.0.6",
     "@types/jwt-decode": "^2.2.1",
     "@types/mongoose": "^5.11.96",
-    "@types/node": "^20",
-    "@types/react": "^19",
+    "@types/node": "20.17.30",
+    "@types/react": "19.1.2",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.3.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5"
+    "typescript": "5.8.3"
   }
 }

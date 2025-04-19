@@ -1,8 +1,8 @@
 export class CreateExpenseDto {
   name: string;
-  category: number;
+  category: string;
   price: number;
-  paymentMethod: number;
+  paymentMethod: string;
   date: Date;
   flagForIncome: boolean;
 }

@@ -47,10 +47,15 @@ export default function Dashboard() {
   const [filteredExpenses, setFilteredExpenses] = useState<ExpenseDocument[]>([]);
   const [allExpenses, setAllExpenses] = useState<ExpenseDocument[]>([]); //full unfiltered list
 
-
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   type SearchBy = "name" | "category";
   const [searchBy, setSearchBy] = useState<SearchBy>("name"); // or "category"
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [isUpdateFormOpen, setIsUpdateFormOpen] = useState(false);
+  const [formData, setFormData] = useState<ExpenseDocument | null>(null);
+  
+
   
 
   const backend_url = "http://localhost:3000";
@@ -149,38 +154,90 @@ export default function Dashboard() {
       ),
     };
   };
+
+  const handleCreateExpense = async () => {
+    try {
+      const user_data = await axiosInstance.get(`${backend_url}/auth/get-cookie-data`);
+      const dataString = user_data.data.userData;
+      const data = JSON.parse(dataString);
+      const email = data.email;
+      const response = await axiosInstance.post(`${backend_url}/expenses/${email}`, {
+        ...formData,
+      });
+      const createdExpense = response.data;
+  
+      setExpense((prev) => [...prev, createdExpense]);
+      setAllExpenses((prev) => [...prev, createdExpense]);
+  
+      setFormData(null); // reset form state
+      setIsCreateFormOpen(false);
+      fetchWallet(); // optional if list needs to be refreshed
+    } catch (err) {
+      console.error("Error creating expense:", err);
+      setError("Failed to create expense. Please try again.");
+    }
+  };
+  
+  const handleUpdateExpense = async () => {
+    try {
+      if (!formData?._id) return;
+  
+      const response = await axiosInstance.put(`${backend_url}/expenses/${formData._id}`, formData);
+      const updatedExpense = response.data;
+  
+      setExpense((prev) =>
+        prev.map((exp) => (exp._id === updatedExpense._id ? updatedExpense : exp))
+      );
+      setAllExpenses((prev) =>
+        prev.map((exp) => (exp._id === updatedExpense._id ? updatedExpense : exp))
+      );
+  
+      setFormData(null);
+      setIsUpdateFormOpen(false);
+      fetchWallet();
+    } catch (err) {
+      console.error("Error updating expense:", err);
+      setError("Failed to update expense. Please try again.");
+    }
+  };
   
 
-  
+  async function handleDelete(id: string) {
+    const user_data = await axiosInstance.get(`${backend_url}/auth/get-cookie-data`);
+    const dataString = user_data.data.userData;
+    const data = JSON.parse(dataString);
+    const email = data.email;
+    await axiosInstance.delete(`${backend_url}/expenses/${email}/${id}`);
+    fetchWallet();
+  }
+  const fetchWallet = async () => {
+    try {
+      const user_data = await axiosInstance.get(`${backend_url}/auth/get-cookie-data`);
+      const dataString = user_data.data.userData;
+      const data = JSON.parse(dataString);
+      const email = data.email;
+
+      const user = await axiosInstance.get<UserDocument>(`${backend_url}/user/${email}`);
+      setName(user.data.name);
+
+      const wallet = await axiosInstance.get<WalletResponse>(`${backend_url}/user/wallet/${email}`);
+      if (wallet.data) {
+        const walletId = wallet.data._id;
+        const walletDetails = await axiosInstance.get<WalletDocument>(`${backend_url}/wallets/${walletId}`);
+        setCurrency(walletDetails.data.currency);
+        const expenses: ExpenseDocument[] = walletDetails.data.expenses;
+        setExpense(expenses);
+        setAllExpenses(expenses); // Store the full list of expenses
+        console.log(expenses[0])
+      } else {
+        setWalletError(true);
+      }
+    } catch (error) {
+      setExpenseError(true);
+    }
+  };
   
   useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        const user_data = await axiosInstance.get(`${backend_url}/auth/get-cookie-data`);
-        const dataString = user_data.data.userData;
-        const data = JSON.parse(dataString);
-        const email = data.email;
-
-        const user = await axiosInstance.get<UserDocument>(`${backend_url}/user/${email}`);
-        setName(user.data.name);
-
-        const wallet = await axiosInstance.get<WalletResponse>(`${backend_url}/user/wallet/${email}`);
-        if (wallet.data) {
-          const walletId = wallet.data._id;
-          const walletDetails = await axiosInstance.get<WalletDocument>(`${backend_url}/wallets/${walletId}`);
-          setCurrency(walletDetails.data.currency);
-          const expenses: ExpenseDocument[] = walletDetails.data.expenses;
-          setExpense(expenses);
-          setAllExpenses(expenses); // Store the full list of expenses
-          console.log(expenses[0])
-        } else {
-          setWalletError(true);
-        }
-      } catch (error) {
-        setExpenseError(true);
-      }
-    };
-
     fetchWallet();
   }, []); // Add expenses as a dependency to re-fetch when it changes
 
@@ -190,8 +247,8 @@ export default function Dashboard() {
       {/* Sidebar */}
       <Sidebar />
   
-     {/* Main content */}
-     <main className="flex-1 p-8">
+      {/* Main content */}
+      <main className="flex-1 p-8">
         <div className="flex justify-between items-center mb-6">
           {/* Search bar and toggle */}
           <div className="relative flex gap-4 w-1/2">
@@ -218,33 +275,29 @@ export default function Dashboard() {
           {/* Notifications and Username */}
           <div className="flex items-center gap-4">
             <Bell className="text-gray-500" />
-            <div className="flex items-center gap-2">
-            </div>
           </div>
         </div>
   
         <h2 className="text-2xl font-semibold mb-6">Expenses Breakdown</h2>
   
-      
-          {/* Expenses Summary */}  
-  
+        {/* Expenses Summary */}
         <div className="bg-white rounded-xl shadow p-6">
           <h3 className="text-lg font-semibold mb-4">My Expenses</h3>
   
-          {/* Filters for Month and Category */}
-          <div className="flex gap-4 mb-4">
+          <div className="flex justify-end items-center gap-4 mb-4">
+            {/* Month Filter Dropdown */}
             <select
-              className="px-4 py-2 border border-gray-300 rounded-full"
+              className="px-4 py-2 border border-gray-300 rounded-full text-blue-600"
               value={selectedMonth}
               onChange={(e) => {
                 const month = parseInt(e.target.value);
                 setSelectedMonth(month);
-        const filtered =
-        month === -1
-          ? allExpenses
-          : allExpenses.filter(
-              (expense) => new Date(expense.date).getMonth() === month
-            );
+                const filtered =
+                  month === -1
+                    ? allExpenses
+                    : allExpenses.filter(
+                        (expense) => new Date(expense.date).getMonth() === month
+                      );
                 setExpense(filtered);
               }}
             >
@@ -263,7 +316,16 @@ export default function Dashboard() {
               <option value="11">December</option>
             </select>
   
-            {/* Add more filters if needed */}
+            {/* Create Expense Button */}
+            <button
+  onClick={() => {
+    setFormData(null); // default
+    setIsCreateFormOpen(true);
+  }}
+>
+  Create Expense
+</button>
+
           </div>
   
           {/* Expenses List */}
@@ -273,36 +335,294 @@ export default function Dashboard() {
                 expense[searchBy]
                   .toLowerCase()
                   .includes(searchTerm.toLowerCase())
-              ).map((expense, index) =>
-              !expense.flagForIncome ? (
-                <li
-                  key={index}
-                  className="flex justify-between items-center py-4 border-b last:border-b-0"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
-                      {getCategoryDetails(expense.category).icon}
-                    </div>
-                    <div>
-                      <div className="font-medium">{expense.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(expense.date).toLocaleDateString()}
+              )
+              .map(
+                (expense, index) =>
+                  !expense.flagForIncome && (
+                    <li
+                      key={index}
+                      className="flex justify-between items-center py-4 border-b last:border-b-0"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200">
+                          {getCategoryDetails(expense.category).icon}
+                        </div>
+                        <div>
+                          <div className="font-medium">{expense.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(expense.date).toLocaleDateString()}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500">{expense.category}</div>
-                    <div className="font-bold text-red-500">
-                      - {currency} {expense.price.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-600">{expense.paymentMethod}</div>
-                  </div>
-                </li>
-              ) : null
-            )}
+  
+                      <div className="text-right">
+                        <div className="text-sm text-gray-500">{expense.category}</div>
+                        <div className="font-bold text-red-500">
+                          - {currency} {expense.price.toFixed(2)}
+                        </div>
+                        <div className="text-sm text-gray-600">{expense.paymentMethod}</div>
+                      </div>
+  
+                      <div className="flex gap-2 mt-2">
+                      <button
+  onClick={() => {
+    setFormData(expense); // fill with data
+    setIsUpdateFormOpen(true);
+  }}
+>
+  Update
+</button>
+
+
+                        <button
+                          onClick={() => handleDelete(expense._id)}
+                          className="text-red-500"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  )
+              )}
           </ul>
         </div>
       </main>
+
+
+
+  
+      {/* Expense Form Modal */}
+      {isCreateFormOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg w-96">
+      <h2 className="text-xl font-semibold mb-4">Create Expense</h2>
+
+      <form onSubmit={async (e) => {
+        e.preventDefault();
+        await handleCreateExpense();
+      }}>
+          {/* Name */}
+  <input
+    type="text"
+    placeholder="Name"
+    value={formData?.name || ""}
+    onChange={(e) => setFormData({ ...formData!, name: e.target.value })}
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  />
+
+  {/* Category (string) */}
+  <select
+    value={formData?.category || ""}
+    onChange={(e) =>
+      setFormData({ ...formData!, category: e.target.value })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  >
+    <option value="" disabled>Select Category</option>
+    <option value="Food">Food</option>
+    <option value="Transport">Transport</option>
+    <option value="Shopping">Shopping</option>
+    <option value="Utilities">Utilities</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {/* Price */}
+  <input
+    type="number"
+    placeholder="Price"
+    value={formData?.price ?? ""}
+    onChange={(e) =>
+      setFormData({ ...formData!, price: parseFloat(e.target.value) })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  />
+
+  {/* Payment Method (string) */}
+  <select
+    value={formData?.paymentMethod || ""}
+    onChange={(e) =>
+      setFormData({ ...formData!, paymentMethod: e.target.value })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  >
+    <option value="" disabled>Select Payment Method</option>
+    <option value="Cash">Cash</option>
+    <option value="Credit Card">Credit Card</option>
+    <option value="Debit Card">Debit Card</option>
+    <option value="Bank Transfer">Bank Transfer</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {/* Date */}
+  <input
+    type="date"
+    value={
+      formData?.date
+        ? new Date(formData.date).toISOString().split("T")[0]
+        : ""
+    }
+    onChange={(e) =>
+      setFormData({
+        ...formData!,
+        date: new Date(e.target.value),
+      })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  />
+
+  {/* Income Flag */}
+  <div className="flex items-center gap-2 mb-3">
+    <input
+      type="checkbox"
+      checked={formData?.flagForIncome ?? false}
+      onChange={(e) =>
+        setFormData({ ...formData!, flagForIncome: e.target.checked })
+      }
+    />
+    <label>Is this income?</label>
+  </div>
+
+        <div className="flex justify-between mt-4">
+          <button
+            type="button"
+            onClick={() => {
+              setFormData(null);
+              setIsCreateFormOpen(false);
+            }}
+            className="px-4 py-2 bg-gray-300 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Create
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+{isUpdateFormOpen && formData && (
+  <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg w-96">
+      <h2 className="text-xl font-semibold mb-4">Update Expense</h2>
+
+      <form onSubmit={async (e) => {
+        e.preventDefault();
+        await handleUpdateExpense();
+      }}>
+        {/* Name */}
+  <input
+    type="text"
+    placeholder="Name"
+    value={formData.name}
+    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  />
+
+  {/* Category */}
+  <select
+    value={formData.category}
+    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  >
+    <option value="" disabled>Select Category</option>
+    <option value="Food">Food</option>
+    <option value="Transport">Transport</option>
+    <option value="Shopping">Shopping</option>
+    <option value="Utilities">Utilities</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {/* Price */}
+  <input
+    type="number"
+    placeholder="Price"
+    value={formData.price}
+    onChange={(e) =>
+      setFormData({ ...formData, price: parseFloat(e.target.value) })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  />
+
+  {/* Payment Method */}
+  <select
+    value={formData.paymentMethod}
+    onChange={(e) =>
+      setFormData({ ...formData, paymentMethod: e.target.value })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  >
+    <option value="" disabled>Select Payment Method</option>
+    <option value="Cash">Cash</option>
+    <option value="Credit Card">Credit Card</option>
+    <option value="Debit Card">Debit Card</option>
+    <option value="Bank Transfer">Bank Transfer</option>
+    <option value="Other">Other</option>
+  </select>
+
+  {/* Date */}
+  <input
+    type="date"
+    value={
+      formData.date
+        ? new Date(formData.date).toISOString().split("T")[0]
+        : ""
+    }
+    onChange={(e) =>
+      setFormData({ ...formData, date: new Date(e.target.value) })
+    }
+    className="w-full mb-3 p-2 border border-gray-300 rounded"
+    required
+  />
+
+  {/* Income Flag */}
+  <div className="flex items-center gap-2 mb-3">
+    <input
+      type="checkbox"
+      checked={formData.flagForIncome}
+      onChange={(e) =>
+        setFormData({ ...formData, flagForIncome: e.target.checked })
+      }
+    />
+    <label>Is this income?</label>
+  </div>
+
+        <div className="flex justify-between mt-4">
+          <button
+            type="button"
+            onClick={() => {
+              setFormData(null);
+              setIsUpdateFormOpen(false);
+            }}
+            className="px-4 py-2 bg-gray-300 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-green-600 text-white rounded"
+          >
+            Update
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }  
