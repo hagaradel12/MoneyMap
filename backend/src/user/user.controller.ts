@@ -4,6 +4,8 @@ import { Users } from './user.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AddReminderDto } from './dto/add-reminder.dto';
 import { AddNotificationDto } from './dto/add-notification.dto';
+import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { UpdateNotificationDto } from './dto/update-notification.dto';
 
 @Controller('user')
 export class UsersController {
@@ -38,72 +40,81 @@ export class UsersController {
   }
 
 
-////////////////////////////////
-// User Reminders and Notifications
+// Reminders
 
-//Reminders
-
-@Post(':username/reminders')
+@Post(':email/reminders')
 async addReminder(
-  @Param('username') username: string,
+  @Param('email') email: string, 
   @Body() addReminderDto: AddReminderDto,
 ): Promise<Users> {
-  return this.usersService.addReminder(username, addReminderDto);
+  return this.usersService.addReminder(email, addReminderDto); 
 }
 
-@Delete(':username/reminders/:reminderId')
+
+@Put(':email/reminders/:reminderId')
+async updateReminder(
+  @Param('email') email: string,
+  @Param('reminderId') reminderId: string,
+  @Body() updateReminderDto: UpdateReminderDto,
+): Promise<Users> {
+  return this.usersService.updateReminder(email, reminderId, updateReminderDto);
+}
+
+@Delete(':email/reminders/:reminderId')
 async removeReminder(
-  @Param('username') username: string,
+  @Param('email') email: string, 
   @Param('reminderId') reminderId: string,
 ): Promise<Users> {
-  return this.usersService.removeReminder(username, reminderId);
+  return this.usersService.removeReminder(email, reminderId); 
 }
 
-@Delete(':username/reminders')
-async clearReminders(@Param('username') username: string): Promise<Users> {
-  return this.usersService.clearReminders(username);
+@Delete(':email/reminders')
+async clearReminders(
+  @Param('email') email: string, 
+): Promise<Users> {
+  return this.usersService.clearReminders(email); 
 }
 
 
+// Notifications
 
-
-//Notifications
-
-@Post(':username/notifications')
+@Post(':email/notifications')
 async addNotification(
-  @Param('username') username: string,
+  @Param('email') email: string, 
   @Body() addNotificationDto: AddNotificationDto,
 ): Promise<Users> {
-  return this.usersService.addNotification(username, addNotificationDto);
+  return this.usersService.addNotification(email, addNotificationDto); 
 }
 
-@Put(':username/notifications/:notificationId/read')
+@Put(':email/notifications/:notificationId')
+async updateNotification(
+  @Param('email') email: string,
+  @Param('notificationId') notificationId: string,
+  @Body() updateNotificationDto: UpdateNotificationDto,
+): Promise<Users> {
+  return this.usersService.updateNotification(email, notificationId, updateNotificationDto);
+}
+
+@Put(':email/notifications/:notificationId/read')
 async markNotificationAsRead(
-  @Param('username') username: string,
+  @Param('email') email: string, 
   @Param('notificationId') notificationId: string,
 ): Promise<Users> {
-  return this.usersService.markNotificationAsRead(username, notificationId);
+  return this.usersService.markNotificationAsRead(email, notificationId); 
 }
 
-
-@Delete(':username/notifications/:notificationId')
+@Delete(':email/notifications/:notificationId')
 async removeNotification(
-  @Param('username') username: string,
+  @Param('email') email: string, 
   @Param('notificationId') notificationId: string,
 ): Promise<Users> {
-  return this.usersService.removeNotification(username, notificationId);
+  return this.usersService.removeNotification(email, notificationId); 
 }
 
-
-@Delete(':username/notifications')
+@Delete(':email/notifications')
 async clearNotifications(
-  @Param('username') username: string,
+  @Param('email') email: string, 
 ): Promise<Users> {
-  return this.usersService.clearNotifications(username);
+  return this.usersService.clearNotifications(email); 
 }
-
 }
-
-
-
-
