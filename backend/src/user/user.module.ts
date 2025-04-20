@@ -8,6 +8,8 @@ import { WalletModule } from 'src/wallet/wallet.module'; // Import WalletModule 
 import { ExpensesModule } from 'src/expenses/expenses.module';
 import { RemindersModule } from 'src/reminders/reminders.module';
 import { Reminder,ReminderSchema } from 'src/reminders/reminders.schema';
+import { Notification, NotificationSchema } from 'src/notifications/notifications.schema';
+import { NotificationModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -15,10 +17,12 @@ import { Reminder,ReminderSchema } from 'src/reminders/reminders.schema';
       { name: Users.name, schema: UsersSchema },
       { name: Wallet.name, schema: WalletSchema },
       { name: Reminder.name, schema: ReminderSchema },
+      { name: Notification.name, schema: NotificationSchema },
     ]),
     forwardRef(() => WalletModule),
     forwardRef(() => ExpensesModule),
     forwardRef(() => RemindersModule),
+    forwardRef(() => NotificationModule)
   ],
   controllers: [UsersController],
   providers: [UsersService ],

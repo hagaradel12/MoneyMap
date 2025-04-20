@@ -15,12 +15,18 @@ import { WalletDocument } from 'src/wallet/wallet.schema';
 
 import { AddReminderDto } from './dto/add-reminder.dto';
 import { AddNotificationDto } from './dto/add-notification.dto';
+import { UpdateReminderDto } from './dto/update-reminder.dto';
+import { UpdateNotificationDto } from './dto/update-notification.dto';
+import { Reminder, ReminderDocument } from 'src/reminders/reminders.schema';
+import { Notification , NotificationDocument } from 'src/notifications/notifications.schema';
 
 
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(Users.name) private usersModel: Model<UserDocument>,
   @InjectModel('Wallet') private readonly walletModel: Model<WalletDocument>,
+  @InjectModel(Reminder.name) private reminderModel: Model<ReminderDocument>,
+  @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
 ) {}
 
   // CREATE NEW User FOR REGISTER
@@ -72,81 +78,123 @@ export class UsersService {
 
 // User Reminders and Notifications
 
-//Reminders
-async addReminder(username: string, addReminderDto: AddReminderDto): Promise<Users> {
+// Add Reminder
+async addReminder(email: string, addReminderDto: AddReminderDto): Promise<Users> {
+  const reminder = await this.reminderModel.create(addReminderDto);
+
   const user = await this.usersModel.findOneAndUpdate(
-    { username },
-    { $push: { reminders: addReminderDto } },
+    { email: email }, 
+    { $push: { reminders: reminder._id } },
     { new: true }
   );
-  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  if (!user) throw new NotFoundException(`User with email ${email} not found`);
+  return user;
+}
+// update Reminder
+async updateReminder(email: string, reminderId: string, updateReminderDto: UpdateReminderDto): Promise<Users> {
+  const reminder = await this.reminderModel.findByIdAndUpdate(
+    reminderId,
+    updateReminderDto,
+    { new: true }
+  );
+
+  if (!reminder) throw new NotFoundException(`Reminder with ID ${reminderId} not found`);
+
+  const user = await this.usersModel.findOne({ email });
+  if (!user || !user.reminders.includes(reminderId as any)) {
+    throw new NotFoundException(`User or reminder not found`);
+  }
+
+  return user;
+}
+// Remove Reminder
+async removeReminder(email: string, reminderId: string): Promise<Users> {
+  await this.reminderModel.findByIdAndDelete(reminderId);
+
+  const user = await this.usersModel.findOneAndUpdate(
+    { email: email }, 
+    { $pull: { reminders: reminderId } },
+    { new: true }
+  );
+  if (!user) throw new NotFoundException(`User with email ${email} not found`);
   return user;
 }
 
-///Removes a specific reminder
-async removeReminder(username: string, reminderId: string): Promise<Users> {
-  const user = await this.usersModel.findOneAndUpdate(
-    { username },
-    { $pull: { reminders: { _id: reminderId } } },
-    { new: true }
-  );
-  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+// Clear all Reminders
+async clearReminders(email: string): Promise<Users> {
+  const user = await this.usersModel.findOne({ email: email }); // Changed from 'name' to 'email'
+  if (!user) throw new NotFoundException(`User with email ${email} not found`);
+
+  await this.reminderModel.deleteMany({ _id: { $in: user.reminders } });
+
+  user.reminders = [];
+  await user.save();
   return user;
 }
 
-////Clears all reminders
-async clearReminders(username: string): Promise<Users> {
-  const user = await this.usersModel.findOneAndUpdate(
-    { username },
-    { $set: { reminders: [] } },
-    { new: true }
-  );
-  if (!user) throw new NotFoundException(`User with username ${username} not found`);
-  return user;
-}
-// Notifications
+// Add Notification
+async addNotification(email: string, addNotificationDto: AddNotificationDto): Promise<Users> {
+  const notification = await this.notificationModel.create(addNotificationDto);
 
-async addNotification(username: string, addNotificationDto: AddNotificationDto): Promise<Users> {
-  const notification = { ...addNotificationDto, read: false };
   const user = await this.usersModel.findOneAndUpdate(
-    { username },
-    { $push: { notifications: notification } },
+    { email: email }, 
+    { $push: { notifications: notification._id } },
     { new: true }
   );
-  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+  if (!user) throw new NotFoundException(`User with email ${email} not found`);
+  return user;
+}
+// Update Notification
+async updateNotification(email: string, notificationId: string, updateNotificationDto: UpdateNotificationDto): Promise<Users> {
+  const notification = await this.notificationModel.findByIdAndUpdate(
+    notificationId,
+    updateNotificationDto,
+    { new: true }
+  );
+
+  if (!notification) throw new NotFoundException(`Notification with ID ${notificationId} not found`);
+
+  const user = await this.usersModel.findOne({ email });
+  if (!user || !user.notifications.includes(notificationId as any)) {
+    throw new NotFoundException(`User or notification not found`);
+  }
+
   return user;
 }
 
-/////Clears all notifications
-async clearNotifications(username: string): Promise<Users> {
-  const user = await this.usersModel.findOneAndUpdate(
-    { username },
-    { $set: { notifications: [] } },
-    { new: true }
-  );
-  if (!user) throw new NotFoundException(`User with username ${username} not found`);
+// Clear all Notifications
+async clearNotifications(email: string): Promise<Users> {
+  const user = await this.usersModel.findOne({ email: email }); // Changed from 'name' to 'email'
+  if (!user) throw new NotFoundException(`User with email ${email} not found`);
+
+  await this.notificationModel.deleteMany({ _id: { $in: user.notifications } });
+
+  user.notifications = [];
+  await user.save();
   return user;
 }
-///Marks a specific notification as read
-async markNotificationAsRead(username: string, notificationId: string): Promise<Users> {
+
+// Mark notification as read
+async markNotificationAsRead(email: string, notificationId: string): Promise<Users> {
+  await this.notificationModel.findByIdAndUpdate(notificationId, { isRead: true });
+
+  const user = await this.usersModel.findOne({ email: email }); 
+  if (!user || !user.notifications.includes(notificationId as any)) {
+    throw new NotFoundException(`User or notification not found`);
+  }
+  return user;
+}
+
+// Remove notification
+async removeNotification(email: string, notificationId: string): Promise<Users> {
+  await this.notificationModel.findByIdAndDelete(notificationId);
+
   const user = await this.usersModel.findOneAndUpdate(
-    { username, 'notifications._id': notificationId },
-    { $set: { 'notifications.$.read': true } },
+    { email: email }, 
+    { $pull: { notifications: notificationId } },
     { new: true }
   );
   if (!user) throw new NotFoundException(`User or notification not found`);
   return user;
 }
-///Removes a specific notification
-async removeNotification(username: string, notificationId: string): Promise<Users> {
-  const user = await this.usersModel.findOneAndUpdate(
-    { username },
-    { $pull: { notifications: { _id: notificationId } } },
-    { new: true }
-  );
-  if (!user) throw new NotFoundException(`User or notification not found`);
-  return user;
-}
-
-
 }
