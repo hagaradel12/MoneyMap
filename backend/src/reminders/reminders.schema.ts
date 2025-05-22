@@ -3,22 +3,23 @@ import { Document } from 'mongoose';
 
 export type ReminderDocument = Reminder & Document;  // Hydrated document type
 
-@Schema()
+@Schema({ timestamps: true })
 export class Reminder {
   @Prop({ required: true })
-  name: string;
+  title: string;
 
-  @Prop({ required: true })
+  @Prop()
   dueDate: Date;
 
-  @Prop({ required: true, default: Date.now })
-  createdAt: Date;
-
-  @Prop({ required: true, default: false })
-  flag: boolean;
+  @Prop({ default: false })
+  read: boolean;
 
   @Prop({ default: false })
-  deleted: boolean;  // A flag to mark if the reminder is deleted (soft delete)
+  deleted: boolean;
+
+  @Prop({ default: false })
+  flag: boolean;
 }
+
 
 export const ReminderSchema = SchemaFactory.createForClass(Reminder);

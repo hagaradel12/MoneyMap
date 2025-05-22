@@ -117,4 +117,9 @@ async clearNotifications(
 ): Promise<Users> {
   return this.usersService.clearNotifications(email); 
 }
+@Get(':email/reminders')
+async getUserReminders(@Param('email') email: string) {
+  return this.usersService.getUserReminders(email);
+}
+
 }

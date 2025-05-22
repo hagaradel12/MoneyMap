@@ -1,7 +1,7 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bell, Search, UserCircle, Wallet, TrendingDown, TrendingUp, BarChart2, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { Bell, Search, UserCircle, Wallet, TrendingDown, TrendingUp, BarChart2, Settings, HelpCircle, LogOut, Plus } from 'lucide-react';
 import axiosInstance from '../utils/axiosInstance';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
@@ -33,6 +33,12 @@ interface UserDocument{
     phoneNumber: string;
     wallet: string;
 }
+interface Reminders{
+ _id: string;
+  title: string;
+  dueDate: string;
+  read: boolean;
+};
 
 
 export default function Dashboard() {
@@ -48,7 +54,11 @@ export default function Dashboard() {
     const [user_name, setName] = useState<string>('');
     const [showNotifications, setShowNotifications] = useState(false);
     const [userEmail, setUserEmail] = useState<string>('');
-    
+     const [reminders, setReminders] = useState<Reminders[]>([]);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDate, setNewDate] = useState('');
+    const [recentExpenses, setRecentExpenses] = useState<ExpenseDocument[]>([]);
+
     
     useEffect(() => {
         const fetchWallet = async () => {
@@ -107,7 +117,75 @@ export default function Dashboard() {
         fetchWallet();
       }, []);
 
+     const fetchReminders = () => {
+    axios.get(`${backend_url}/user/${userEmail}/reminders`)
 
+      .then(res => setReminders(res.data))
+      .catch(err => console.error('Fetch error:', err));
+  };
+
+  useEffect(() => {
+    fetchReminders();
+  }, []);
+
+ const createReminder = () => {
+  if (!newTitle || !newDate || !userEmail) return;
+
+  axios
+    .post(`${backend_url}/reminders/user/${userEmail}`, {
+      title: newTitle,
+      dueDate: new Date(newDate).toISOString(),
+    })
+    .then(() => {
+      setNewTitle('')
+      setNewDate('');
+      fetchReminders(); // refresh the list
+    })
+    .catch((err) => console.error('Error creating reminder:', err));
+};
+useEffect(() => {
+  if (userEmail) {
+    fetchReminders();
+  }
+}, [userEmail]);
+
+
+  useEffect(() => {
+  const fetchRecentExpenses = async () => {
+    try {
+      const user_data = await axiosInstance.get(`${backend_url}/auth/get-cookie-data`);
+      const dataString = user_data.data.userData;
+      const data = JSON.parse(dataString);
+      const email = data.email;
+
+      const walletRes = await axiosInstance.get(`${backend_url}/user/wallet/${email}`);
+      const walletId = walletRes.data._id;
+
+      const walletDetails = await axiosInstance.get(`${backend_url}/wallets/${walletId}`);
+      const fullExpenses = walletDetails.data.expenses;
+
+      // Only consider actual expenses (not incomes)
+      const filtered = fullExpenses.filter((e: ExpenseDocument) => !e.flagForIncome);
+
+      // Sort by date descending and take the latest 5
+      const recent = filtered
+        .sort((a: ExpenseDocument, b: ExpenseDocument) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+        .slice(0, 5);
+
+      setRecentExpenses(recent);
+    } catch (error) {
+      console.error('Error fetching recent expenses:', error);
+    }
+  };
+
+  fetchRecentExpenses();
+}, []);
+
+  const markAsRead = (id: string) => {
+    axios.patch(`${backend_url}/reminders/read/${id}`).then(fetchReminders);
+  };
 
     return (
     <div className="flex h-screen bg-gray-100 text-gray-800">
@@ -201,44 +279,98 @@ export default function Dashboard() {
 
         {/* Reminders & Recent Expenses */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card className="col-span-1">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Reminders</h3>
-                <a href="#" className="text-sm text-blue-500">See All</a>
-              </div>
-              <ul className="space-y-2">
-                <li><input type="checkbox" className="mr-2" />Bali Vacation <span className="text-xs text-gray-500 ml-2">Target: Aug 25 2022</span></li>
-                <li><input type="checkbox" className="mr-2" />New Gadget <span className="text-xs text-gray-500 ml-2">Target: Aug 25 2022</span></li>
-                <li><input type="checkbox" className="mr-2" />Charity <span className="text-xs text-gray-500 ml-2">Target: Aug 25 2022</span></li>
-              </ul>
-            </CardContent>
-          </Card>
+    <Card className="col-span-2">
+      <CardContent className="p-4 max-h-[400px] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Reminders</h3>
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              placeholder="New reminder"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              className="border px-2 py-1 rounded text-sm"
+            />
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              className="border px-2 py-1 rounded text-sm"
+            />
+            <button
+              onClick={createReminder}
+              disabled={!newTitle || !newDate}
+              className={`px-3 py-1 rounded flex items-center text-white ${
+                !newTitle || !newDate
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-          <Card className="col-span-2">
+        {reminders.length > 0 ? (
+          <ul className="space-y-2">
+            {reminders.map((reminder) => (
+              <li key={reminder._id} className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={reminder.read}
+                    onChange={() => markAsRead(reminder._id)}
+                  />
+                  {reminder.title}
+                </div>
+                <span className="text-xs text-gray-500">
+                  Target: {
+  reminder.dueDate
+    ? new Date(reminder.dueDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+      })
+    : 'No date'
+}
+
+                  
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-400 italic">Create a reminder</p>
+        )}
+      </CardContent>
+    </Card>
+  
+
+
+          <Card className="col-span-1">
             <CardContent className="p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Recent Expenses</h3>
                 <a href="#" className="text-sm text-blue-500">See All</a>
               </div>
-              <ul className="divide-y divide-gray-200">
-                <li className="py-2 flex justify-between items-center">
-                  <span>Figma</span>
-                  <span className="text-green-600 font-medium">$100</span>
-                </li>
-                <li className="py-2 flex justify-between items-center">
-                  <span>Youtube</span>
-                  <span className="text-green-600 font-medium">$120</span>
-                </li>
-                <li className="py-2 flex justify-between items-center">
-                  <span>Spotify</span>
-                  <span className="text-green-600 font-medium">$15</span>
-                </li>
-                <li className="py-2 flex justify-between items-center">
-                  <span>Freepik</span>
-                  <span className="text-green-600 font-medium">$300</span>
-                </li>
-              </ul>
+           <ul className="divide-y divide-gray-200">
+  {recentExpenses.length > 0 ? (
+    recentExpenses.map((expense) => (
+      <li key={expense._id} className="py-2 flex justify-between items-center">
+        <span>{expense.name}</span>
+        <span className="text-rose-600 font-medium">
+          {currency} {expense.price}
+        </span>
+      </li>
+    ))
+  ) : (
+    <li className="py-2 text-sm text-gray-400 italic">
+      No recent expenses found.
+    </li>
+  )}
+</ul>
+
             </CardContent>
           </Card>
         </div>

@@ -197,4 +197,11 @@ async removeNotification(email: string, notificationId: string): Promise<Users> 
   if (!user) throw new NotFoundException(`User or notification not found`);
   return user;
 }
+
+async getUserReminders(email: string): Promise<Reminder[]> {
+  const user = await this.usersModel.findOne({ email }).populate<{ reminders: Reminder[] }>('reminders');
+  if (!user) throw new NotFoundException(`User with email ${email} not found`);
+  return user.reminders as Reminder[];
+}
+
 }

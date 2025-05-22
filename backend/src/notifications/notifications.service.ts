@@ -71,7 +71,7 @@ export class NotificationService {
       if (diffInDays <= 2 && diffInDays >= 0) {
         const newNotif = await this.notificationModel.create({
           title: 'Reminder',
-          description: `You have a bill due in ${diffInDays} days: '${reminder.name}'`,
+          description: `You have a bill due in ${diffInDays} days: '${reminder.title}'`,
           isRead: false,
           createdAt: new Date(),
         }) as NotificationDocument;

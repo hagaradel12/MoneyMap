@@ -27,6 +27,7 @@ export class ExpensesController {
   @Post(':email')
   async createExpense(@Param('email') email: string, @Body() createExpenseDto: CreateExpenseDto): Promise<Expenses> {
     return this.expensesService.createExpense(email, createExpenseDto);
+    
   }
 
   //delete expense and remove it from user's array of expenses AND UPDATE balance in wallet

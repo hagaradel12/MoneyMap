@@ -52,7 +52,11 @@ async findByCategory(cat: string): Promise<Expenses []> {
 //add expense to wallet's array of expenses
 //change user's balance in wallet
   async createExpense(email: string, createExpenseDto: CreateExpenseDto): Promise<Expenses> {
-    const createdExpense = new this.expensesModel(createExpenseDto);
+    const createdExpense = new this.expensesModel({
+      ...createExpenseDto,
+      date: new Date(createExpenseDto.date),
+    });
+    
     
     if(createdExpense.flagForIncome == true){
         await this.walletService.incBalance(email,
@@ -70,6 +74,7 @@ async findByCategory(cat: string): Promise<Expenses []> {
     await user.save();
     await pop_wallet.save();
     return createdExpense.save();
+    
   }
 
   //delete expense by object id
